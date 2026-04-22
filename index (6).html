@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>휘온세무회계 · 보고서 포털</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --navy: #1a3a5c; --navy-dark: #0d2540; --gold: #c8973a;
+    --bg: #f4f6f9; --card: #fff; --border: #e2e8f0;
+    --text: #1a202c; --muted: #718096; --green: #1D9E75; --red: #e53e3e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* 헤더 */
+  .header { background: var(--navy-dark); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
+  .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .logo-text { font-size: 15px; font-weight: 500; color: #fff; }
+  .logo-sub  { font-size: 11px; color: rgba(255,255,255,.5); }
+  .header-right { font-size: 12px; color: rgba(255,255,255,.4); }
+
+  /* 히어로 */
+  .hero { background: linear-gradient(135deg, var(--navy), var(--navy-dark)); padding: 3rem 2rem 2.5rem; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content:''; position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:600px; height:600px; border-radius:50%; background:rgba(200,151,58,.06); pointer-events:none; }
+  .hero h1 { font-size: 22px; font-weight: 500; color: #fff; margin-bottom: 8px; }
+  .hero p  { font-size: 13px; color: rgba(255,255,255,.5); }
+
+  /* 툴바 */
+  .toolbar { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 0; display: flex; gap: 12px; align-items: center; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap input { width: 100%; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #fff; outline: none; font-family: inherit; transition: border .2s; }
+  .search-wrap input:focus { border-color: var(--navy); }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+  .filter-btn { padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 12px; color: var(--muted); cursor: pointer; font-family: inherit; transition: all .2s; white-space: nowrap; }
+  .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* 메인 */
+  .main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
+
+  /* 통계 */
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 2rem; }
+  .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; }
+  .stat-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .stat-icon.blue  { background: #ebf4ff; }
+  .stat-icon.gold  { background: #fef9ec; }
+  .stat-icon.green { background: #e6f7f1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .stat-value { font-size: 20px; font-weight: 700; color: var(--navy); }
+
+  /* 로딩 */
+  .loading-wrap { text-align: center; padding: 3rem 0; color: var(--muted); font-size: 13px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--navy); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 카드 그리드 */
+  .section-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; }
+  .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 16px; }
+  .client-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow .2s, transform .2s; position: relative; }
+  .client-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
+  .card-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); position: relative; }
+  .client-avatar { width: 42px; height: 42px; border-radius: 10px; background: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .client-name { font-size: 15px; font-weight: 600; }
+  .client-reg  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .card-body   { padding: 1rem 1.25rem; }
+  .year-list   { display: flex; flex-direction: column; gap: 8px; }
+
+  /* 연도 항목 */
+  .year-row { display: flex; align-items: center; gap: 6px; }
+  .year-item { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg); border-radius: 8px; text-decoration: none; transition: background .15s; border: 1px solid transparent; }
+  .year-item:hover { background: #ebf4ff; border-color: #bee3f8; }
+  .year-left   { display: flex; align-items: center; gap: 10px; }
+  .year-badge  { font-size: 12px; font-weight: 700; color: var(--navy); background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; min-width: 44px; text-align: center; }
+  .year-desc   { font-size: 12px; color: var(--muted); }
+  .year-right  { display: flex; align-items: center; gap: 8px; }
+  .status-dot  { width: 6px; height: 6px; border-radius: 50%; }
+  .status-dot.live { background: var(--green); }
+  .link-icon   { font-size: 12px; color: var(--muted); }
+  .client-card.hidden { display: none; }
+
+  /* 연도 삭제 버튼 */
+  .btn-del-year {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 6px;
+    background: #fff0f0; border: 1px solid #fed7d7; color: var(--red);
+    font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s; opacity: 0;
+  }
+  .year-row:hover .btn-del-year { opacity: 1; }
+  .btn-del-year:hover { background: var(--red); color: #fff; }
+
+  /* 카드 삭제 버튼 */
+  .btn-del-card {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #fff0f0; border: 1px solid #fed7d7; color: var(--red);
+    font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s; opacity: 0; z-index: 2;
+  }
+  .client-card:hover .btn-del-card { opacity: 1; }
+  .btn-del-card:hover { background: var(--red); color: #fff; }
+
+  /* 추가 버튼 */
+  .add-year { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 7px 12px; border: 1px dashed var(--border); border-radius: 8px; font-size: 12px; color: var(--muted); cursor: pointer; background: transparent; transition: all .2s; font-family: inherit; width: 100%; }
+  .add-year:hover { border-color: var(--navy); color: var(--navy); background: #f0f5fb; }
+
+  /* ADD 카드 */
+  #addCard { border: 2px dashed var(--border) !important; background: transparent !important; box-shadow: none !important; cursor: pointer; }
+  #addCard:hover { border-color: var(--navy) !important; background: #f0f5fb !important; transform: translateY(-2px) !important; }
+  #addCard.dov   { border-color: var(--navy) !important; background: #eef3fa !important; transform: scale(1.025) !important; }
+
+  /* 삭제 확인 모달 */
+  .del-overlay { display: none; position: fixed; inset: 0; background: rgba(13,37,64,.6); backdrop-filter: blur(4px); z-index: 600; align-items: center; justify-content: center; }
+  .del-overlay.open { display: flex; }
+  .del-modal { background: #fff; border-radius: 16px; width: 92%; max-width: 420px; box-shadow: 0 24px 60px rgba(0,0,0,.25); overflow: hidden; animation: mIn .22s ease; }
+  .del-mhd { background: #7f1d1d; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; }
+  .del-mhd-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .del-mhd-close { background: rgba(255,255,255,.15); border: none; cursor: pointer; color: rgba(255,255,255,.8); font-size: 18px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .del-mhd-close:hover { background: rgba(255,255,255,.25); }
+  .del-body { padding: 22px; }
+  .del-desc { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; }
+  .del-target { font-size: 14px; font-weight: 700; color: var(--text); background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; }
+
+  /* 삭제 로그 */
+  .del-logb { display:none; background:#0f1923; border-radius:10px; padding:10px 12px; max-height:120px; overflow-y:auto; font-family:monospace; font-size:11px; line-height:1.9; margin-bottom:14px; }
+  .del-logb.on { display:block; }
+
+  /* 삭제 진행바 */
+  .del-pgw { display:none; margin-bottom:14px; }
+  .del-pgw.on { display:block; }
+
+  .del-act { display: flex; gap: 10px; }
+  .bdel { flex:1; padding: 12px; background: var(--red); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+  .bdel:disabled { opacity: .4; cursor: not-allowed; }
+  .bdel:not(:disabled):hover { opacity: .85; }
+  .bdelcancel { padding: 12px 18px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .bdelcancel:hover { background: #e4eaf2; }
+
+  /* 업로드 모달 */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(13,37,64,.6); backdrop-filter: blur(4px); z-index: 500; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; width: 92%; max-width: 500px; box-shadow: 0 24px 60px rgba(0,0,0,.25); overflow: hidden; animation: mIn .22s ease; max-height: 92vh; overflow-y: auto; }
+  @keyframes mIn { from { transform:translateY(16px) scale(.97); opacity:0 } to { transform:none; opacity:1 } }
+
+  .mhd { background: var(--navy-dark); padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1; }
+  .mhd-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .mhd-close { background: rgba(255,255,255,.1); border: none; cursor: pointer; color: rgba(255,255,255,.7); font-size: 18px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .mhd-close:hover { background: rgba(255,255,255,.22); color: #fff; }
+  .mbody { padding: 22px; }
+
+  .ml  { display: block; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .5px; margin-bottom: 6px; }
+  .mf  { margin-bottom: 14px; }
+  .mr  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .mi  { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text); transition: border-color .2s; background: #fff; }
+  .mi:focus { outline: none; border-color: var(--navy); }
+  .mi.tok-ok  { border-color: var(--green); background: #f0fcf7; }
+  .mi.tok-err { border-color: var(--red);   background: #fff0f0; }
+
+  .tok-row { display: flex; gap: 8px; }
+  .tok-row .mi { flex: 1; }
+  .bxs { padding: 10px 13px; border: none; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .bnavy { background: var(--navy); color: #fff; }
+  .bnavy:hover { opacity:.84; }
+  .bsave { background: #f0f4f8; color: var(--muted); border: 1px solid var(--border); }
+  .bsave:hover { background: #e4eaf2; }
+  .tok-msg { font-size: 11px; margin-top: 5px; min-height: 16px; }
+
+  .dz { border: 2px dashed var(--border); border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all .2s; background: var(--bg); }
+  .dz.dov  { border-color: var(--navy); background: #eef3fa; transform: scale(1.01); }
+  .dz.done { border-color: var(--green); background: #f0fcf7; }
+  .dz input { display: none; }
+  .dz-ic { font-size: 34px; margin-bottom: 8px; line-height: 1; }
+  .dz-mn { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+  .dz-sb { font-size: 12px; color: var(--muted); }
+
+  .fpill { display: none; align-items: center; gap: 10px; margin-top: 10px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+  .fpill.on { display: flex; }
+  .fp-nm { flex:1; font-size:13px; font-weight:600; color:var(--navy); word-break:break-all; }
+  .fp-sz { font-size:11px; color:var(--muted); }
+  .fp-rm { background:none; border:none; cursor:pointer; font-size:16px; color:var(--muted); }
+  .fp-rm:hover { color:var(--red); }
+
+  .pbox { display:none; background:#f0f4f8; border-radius:8px; padding:10px 13px; margin-top:10px; }
+  .pbox.on { display:block; }
+  .pk { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--muted); margin-bottom:3px; }
+  .pv { font-size:12px; color:var(--navy); font-family:monospace; word-break:break-all; }
+
+  .pgw { display:none; margin-top:14px; }
+  .pgw.on { display:block; }
+  .pgtrk { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .pgfll { height:100%; background:var(--gold); border-radius:3px; transition:width .35s; width:0; }
+  .pglbl { font-size:11px; color:var(--muted); margin-top:6px; text-align:center; }
+
+  .logb { display:none; background:#0f1923; border-radius:10px; padding:12px 14px; max-height:150px; overflow-y:auto; font-family:monospace; font-size:11px; line-height:1.9; margin-top:14px; }
+  .logb.on { display:block; }
+  .lk  { color:#4ade80; display:block; }
+  .le  { color:#f87171; display:block; }
+  .li  { color:#93c5fd; display:block; }
+  .lw  { color:#fbbf24; display:block; }
+
+  .okb { display:none; align-items:center; gap:12px; background:#e9f7f1; border:1px solid #6ee7b7; border-radius:10px; padding:14px 16px; margin-top:14px; }
+  .okb.on { display:flex; }
+  .okb-ic { font-size:26px; }
+  .okb-msg { flex:1; }
+  .okb-msg strong { font-size:13px; color:var(--green); display:block; margin-bottom:2px; }
+  .okb-msg a { font-size:11px; color:var(--navy); word-break:break-all; }
+  .bvisit { padding:8px 13px; background:var(--green); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; text-decoration:none; white-space:nowrap; }
+
+  .mact { display:flex; gap:10px; margin-top:18px; }
+  .bup { flex:1; padding:13px; background:var(--gold); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+  .bup:disabled { opacity:.38; cursor:not-allowed; }
+  .bup:not(:disabled):hover { opacity:.88; }
+  .bcancel { padding:13px 18px; background:var(--bg); color:var(--muted); border:1px solid var(--border); border-radius:10px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .bcancel:hover { background:#e4eaf2; }
+
+  .footer { background:var(--navy-dark); padding:1.5rem 2rem; text-align:center; color:rgba(255,255,255,.4); font-size:12px; }
+
+  @media(max-width:600px){
+    .stats { grid-template-columns:1fr 1fr; }
+    .client-grid { grid-template-columns:1fr; }
+    .toolbar { flex-wrap:wrap; }
+    .mr { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-circle">휘온</div>
+      <div><div class="logo-text">휘온세무회계</div><div class="logo-sub">WHION TAX & REALTY</div></div>
+    </div>
+    <div class="header-right">보고서 포털 · 관리자 전용</div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>고객사 법인세 보고서 포털</h1>
+  <p>고객사별 · 연도별 보고서를 한곳에서 관리하고 링크로 전달하세요</p>
+</div>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="고객사명으로 검색..." oninput="filterClients()">
+  </div>
+  <button class="filter-btn active" onclick="filterYear('all',this)">전체</button>
+  <button class="filter-btn" onclick="filterYear('2025',this)">2025</button>
+  <button class="filter-btn" onclick="filterYear('2024',this)">2024</button>
+</div>
+
+<div class="main">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-icon blue">🏢</div><div><div class="stat-label">관리 고객사</div><div class="stat-value" id="nClients">—</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">📄</div><div><div class="stat-label">전체 보고서</div><div class="stat-value" id="nReports">—</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-label">발행 완료</div><div class="stat-value" id="nLive">—</div></div></div>
+  </div>
+
+  <div class="section-label">고객사 목록</div>
+  <div class="client-grid" id="cGrid">
+    <div class="loading-wrap" id="loadingWrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <div>GitHub에서 고객사 목록을 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ 업로드 모달 ════════════ -->
+<div class="overlay" id="ov" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="mhd">
+      <div class="mhd-title" id="mTi">새 고객사 보고서 추가</div>
+      <button class="mhd-close" onclick="closeM()">✕</button>
+    </div>
+    <div class="mbody">
+      <!-- 토큰 -->
+      <div class="mf">
+        <label class="ml">GitHub 토큰 <span style="color:var(--red)">*</span></label>
+        <div class="tok-row">
+          <input type="password" class="mi" id="tokIn" placeholder="ghp_xxxxxxxxxxxx" oninput="tokReset()">
+          <button class="bxs bnavy" onclick="tokVer()">인증</button>
+          <button class="bxs bsave" onclick="tokSave()" title="브라우저에 저장/삭제">💾</button>
+        </div>
+        <div class="tok-msg" id="tokMsg"></div>
+      </div>
+      <!-- 고객사 정보 -->
+      <div class="mr">
+        <div>
+          <label class="ml">고객사명 <span style="color:var(--red)">*</span></label>
+          <input type="text" class="mi" id="mCl" placeholder="예: 한결기획" oninput="mUpd()">
+        </div>
+        <div>
+          <label class="ml">사업연도 <span style="color:var(--red)">*</span></label>
+          <input type="number" class="mi" id="mYr" value="2025" min="2020" max="2035" oninput="mUpd()">
+        </div>
+      </div>
+      <div class="mf" id="mRegR">
+        <label class="ml">사업자번호 · 대표자 <span style="color:#a0aec0;font-weight:400">(선택)</span></label>
+        <input type="text" class="mi" id="mReg" placeholder="000-00-00000 · 홍길동 대표">
+      </div>
+      <!-- 드롭존 -->
+      <div class="mf">
+        <label class="ml">HTML 파일 <span style="color:var(--red)">*</span></label>
+        <div class="dz" id="dz"
+          ondragover="dzOv(event)" ondragleave="dzLv()" ondrop="dzDp(event)"
+          onclick="document.getElementById('fIn').click()">
+          <input type="file" id="fIn" accept=".html" onchange="fSel(this.files[0])">
+          <div class="dz-ic" id="dzIc">📄</div>
+          <div class="dz-mn" id="dzMn">파일을 드래그하거나 클릭</div>
+          <div class="dz-sb" id="dzSb">.html 파일만 가능합니다</div>
+        </div>
+        <div class="fpill" id="fpill">
+          <span>📑</span>
+          <span class="fp-nm" id="fpNm">—</span>
+          <span class="fp-sz" id="fpSz">—</span>
+          <button class="fp-rm" onclick="fClr()">✕</button>
+        </div>
+      </div>
+      <!-- 경로 미리보기 -->
+      <div class="pbox" id="pbox">
+        <div class="pk">업로드 경로</div><div class="pv" id="pVal">—</div>
+        <div class="pk" style="margin-top:6px">배포 URL</div><div class="pv" id="pUrl" style="color:var(--muted)">—</div>
+      </div>
+      <!-- 진행바 -->
+      <div class="pgw" id="pgw"><div class="pgtrk"><div class="pgfll" id="pgf"></div></div><div class="pglbl" id="pgl"></div></div>
+      <!-- 로그 -->
+      <div class="logb" id="logb"></div>
+      <!-- 완료 배너 -->
+      <div class="okb" id="okb">
+        <span class="okb-ic">🎉</span>
+        <div class="okb-msg"><strong>업로드 완료!</strong><a id="okU" href="#" target="_blank">—</a></div>
+        <a class="bvisit" id="okBtn" href="#" target="_blank">열기 ↗</a>
+      </div>
+      <!-- 버튼 -->
+      <div class="mact">
+        <button class="bcancel" onclick="closeM()">취소</button>
+        <button class="bup" id="upBtn" onclick="doUp()" disabled>⬆ GitHub에 업로드</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ 삭제 확인 모달 ════════════ -->
+<div class="del-overlay" id="delOv" onclick="delOvClick(event)">
+  <div class="del-modal">
+    <div class="del-mhd">
+      <div class="del-mhd-title" id="delTi">보고서 삭제</div>
+      <button class="del-mhd-close" onclick="closeDelM()">✕</button>
+    </div>
+    <div class="del-body">
+      <div class="del-desc" id="delDesc">삭제 후 복구할 수 없습니다. 계속하시겠습니까?</div>
+      <div class="del-target" id="delTarget">—</div>
+      <div class="del-logb" id="delLogb"></div>
+      <div class="del-pgw" id="delPgw"><div class="pgtrk"><div class="pgfll" id="delPgf"></div></div><div class="pglbl" id="delPgl"></div></div>
+      <div class="del-act">
+        <button class="bdelcancel" onclick="closeDelM()">취소</button>
+        <button class="bdel" id="delBtn" onclick="doDelete()">🗑 삭제 실행</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  휘온세무회계 · 권유진 대표세무사 · Tel: 02-6959-0169 · 서울 강남 테헤란로13길 8-5, 901호<br>
+  <span style="font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.5px">관리자 전용 · 무단 공유 금지</span>
+</div>
+
+<script>
+/* ── 상수 ──────────────────────────────────
+   이 포털(whion-hub)은 고객사 보고서 저장소(tax-reports)를 원격 조작합니다.
+   - HUB_REPO: 이 포털 자체가 있는 저장소
+   - REPO:     고객사 보고서가 저장되는 저장소 (포털이 조작하는 대상)
+   두 저장소는 완전히 분리되어 있어, 보고서 URL에서 포털을 역추적할 수 없습니다.
+   ─────────────────────────────────────── */
+const OWNER    = 'whiontax';
+const REPO     = 'tax-reports';  // 고객사 보고서 저장소
+const HUB_REPO = 'whion-hub';    // 포털 저장소 (참고용, 직접 사용하지 않음)
+const BR       = 'main';
+const BASE     = 'https://whiontax.github.io/tax-reports';  // 보고서 배포 URL
+const API      = 'https://api.github.com';
+
+/* ── 상태 ── */
+let aYear = 'all', tokOK = false, curFile = null;
+let mMode = 'client', mFld = '', mFldLbl = '';
+let delMode = '', delFolder = '', delYear = '', delCardEl = null, delRowEl = null;
+
+/* ── GitHub API 헬퍼 ── */
+function ghHdrs() {
+  const tok = localStorage.getItem('whion_gh_token') || document.getElementById('tokIn').value.trim();
+  return { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' };
+}
+async function ghGet(path) {
+  const r = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, { headers: ghHdrs() });
+  if (!r.ok) return null;
+  return r.json();
+}
+async function ghPut(path, content, sha, message) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: BR };
+  if (sha) body.sha = sha;
+  return fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, { method: 'PUT', headers: ghHdrs(), body: JSON.stringify(body) });
+}
+async function ghDel(path, sha, message) {
+  return fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: 'DELETE', headers: ghHdrs(),
+    body: JSON.stringify({ message, sha, branch: BR })
+  });
+}
+
+/* ══════════════════════════════════════════
+   페이지 로드: GitHub에서 고객사 목록 동적 로딩
+   ══════════════════════════════════════════ */
+/* ── localStorage 삭제 블랙리스트 관리 ── */
+function getDeletedList() {
+  try { return JSON.parse(localStorage.getItem('whion_deleted') || '[]'); } catch(e) { return []; }
+}
+function addToDeleted(folder, year) {
+  const list = getDeletedList();
+  const key  = year ? `${folder}/${year}` : folder;
+  if (!list.includes(key)) { list.push(key); localStorage.setItem('whion_deleted', JSON.stringify(list)); }
+}
+function removeFromDeleted(folder) {
+  // 업로드 성공 시 블랙리스트에서 제거 (재등록 허용)
+  const list = getDeletedList().filter(k => !k.startsWith(folder));
+  localStorage.setItem('whion_deleted', JSON.stringify(list));
+}
+function isDeletedClient(folder) {
+  return getDeletedList().includes(folder);
+}
+function isDeletedYear(folder, year) {
+  return getDeletedList().includes(`${folder}/${year}`);
+}
+
+async function loadClients() {
+  const ts      = Date.now();
+  const deleted = getDeletedList();
+
+  // GitHub API 헤더 — Cache-Control 헤더 제거 (preflight CORS 오류 방지)
+  const tok  = localStorage.getItem('whion_gh_token');
+  const hdrs = { 'X-GitHub-Api-Version': '2022-11-28' };
+  if (tok) hdrs['Authorization'] = `Bearer ${tok}`;
+
+  try {
+    // 루트 조회 — URL 쿼리스트링으로 브라우저 캐시만 우회 (CORS-safe)
+    const r = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/?_=${ts}`, { headers: hdrs });
+    if (!r.ok) throw new Error(`GitHub API ${r.status} — 토큰을 💾 저장 후 새로고침 해주세요`);
+    const items = await r.json();
+
+    // 고객사 폴더 추출 + 블랙리스트 제외
+    const folders = items.filter(i =>
+      i.type === 'dir' &&
+      !i.name.startsWith('.') &&
+      !deleted.includes(i.name)
+    );
+
+    // 각 폴더 처리 (병렬)
+    const clients = await Promise.all(folders.map(async folder => {
+      try {
+        const fr = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(folder.name)}?_=${ts}`, { headers: hdrs });
+        if (!fr.ok) return null;
+        const files = await fr.json();
+
+        // 4자리 연도.html만 유효, 삭제된 연도 제외
+        const htmlFiles = files.filter(f =>
+          f.type === 'file' &&
+          /^\d{4}\.html$/.test(f.name) &&
+          !deleted.includes(`${folder.name}/${f.name.replace('.html','')}`)
+        );
+        if (htmlFiles.length === 0) return null;
+
+        // 메타태그 읽기: raw.githubusercontent.com 사용 (CORS 문제 없음)
+        // 앞 4KB만 스트리밍으로 읽어서 <head> 파싱
+        let reg = '', ceo = '', displayName = folder.name;
+        try {
+          const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BR}/${encodeURIComponent(folder.name)}/${htmlFiles[0].name}`;
+          const rr = await fetch(rawUrl);
+          if (rr.ok) {
+            const reader = rr.body.getReader();
+            let chunk = '';
+            while (chunk.length < 4096) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              chunk += new TextDecoder().decode(value);
+            }
+            reader.cancel();
+            const regM  = chunk.match(/<meta\s+name="client-reg"\s+content="([^"]+)"/i);
+            const ceoM  = chunk.match(/<meta\s+name="client-ceo"\s+content="([^"]+)"/i);
+            const nameM = chunk.match(/<meta\s+name="client-name"\s+content="([^"]+)"/i);
+            if (regM)  reg  = regM[1];
+            if (ceoM)  ceo  = ceoM[1];
+            if (nameM) displayName = nameM[1];
+          }
+        } catch(e) { /* 메타태그 실패 시 폴더명 사용 */ }
+
+        return {
+          folder:      folder.name,
+          displayName,
+          reg: reg ? `${reg}${ceo ? ' · ' + ceo + ' 대표' : ''}` : '',
+          years: htmlFiles.map(f => f.name.replace('.html','')).sort((a,b) => b-a)
+        };
+      } catch(e) { return null; }
+    }));
+
+    renderGrid(clients.filter(Boolean));
+
+  } catch(e) {
+    document.getElementById('loadingWrap').innerHTML =
+      `<div style="color:var(--red);font-size:13px">⚠ 목록 로드 실패: ${e.message}</div>`;
+  }
+}
+
+function renderGrid(clients) {
+  const grid = document.getElementById('cGrid');
+  grid.innerHTML = '';
+
+  // 고객사 카드 생성
+  clients.forEach(c => {
+    const av = c.displayName.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || c.displayName.slice(0,2);
+    const yearsAttr = c.years.join(',');
+
+    const card = document.createElement('div');
+    card.className = 'client-card';
+    card.dataset.name = c.folder;
+    card.dataset.years = yearsAttr;
+
+    // 연도 항목 HTML
+    const yearRowsHtml = c.years.map(yr => {
+      const url = `${BASE}/${encodeURIComponent(c.folder)}/${yr}.html`;
+      return `
+        <div class="year-row">
+          <a class="year-item" href="${url}" target="_blank" data-year="${yr}"
+             oncontextmenu="copyLink(event,'${url}')">
+            <div class="year-left"><span class="year-badge">${yr}</span><span class="year-desc">법인세 및 결산 분석 보고서</span></div>
+            <div class="year-right"><span class="status-dot live"></span><span class="link-icon">↗</span></div>
+          </a>
+          <button class="btn-del-year" title="${yr}년 보고서 삭제"
+            onclick="openDelM('year','${c.folder}','${yr}',this.closest('.year-row'))">🗑</button>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <button class="btn-del-card" title="고객사 전체 삭제"
+        onclick="openDelM('client','${c.folder}','',this.closest('.client-card'))">🗑</button>
+      <div class="card-header">
+        <div class="client-avatar">${av}</div>
+        <div><div class="client-name">${c.displayName}</div><div class="client-reg">${c.reg || '—'}</div></div>
+      </div>
+      <div class="card-body">
+        <div class="year-list">${yearRowsHtml}</div>
+        <button class="add-year" onclick="openM('year','${c.folder}','${c.displayName}')">＋ 새 연도 보고서 추가</button>
+      </div>`;
+
+    grid.appendChild(card);
+  });
+
+  // addCard 추가
+  const addCard = document.createElement('div');
+  addCard.className = 'client-card';
+  addCard.id = 'addCard';
+  addCard.onclick = () => openM('client');
+  addCard.ondragover = acOver;
+  addCard.ondragleave = acLeave;
+  addCard.ondrop = acDrop;
+  addCard.innerHTML = `
+    <div class="card-header" style="border:none;justify-content:center;padding:2.4rem 1.25rem;">
+      <div style="text-align:center;pointer-events:none;">
+        <div style="font-size:36px;margin-bottom:10px" id="acIc">＋</div>
+        <div style="font-size:14px;font-weight:600;color:var(--muted)" id="acTi">새 고객사 보고서 추가</div>
+        <div style="font-size:12px;color:#a0aec0;margin-top:5px;line-height:1.65" id="acSb">HTML 파일을 드래그하거나<br>클릭하여 업로드하세요</div>
+      </div>
+    </div>`;
+  grid.appendChild(addCard);
+
+  updateStats();
+}
+
+function updateStats() {
+  const cards  = document.querySelectorAll('.client-card[data-name]');
+  const reports = document.querySelectorAll('.year-item');
+  document.getElementById('nClients').textContent = cards.length;
+  document.getElementById('nReports').textContent = reports.length;
+  document.getElementById('nLive').textContent    = reports.length;
+}
+
+/* ── 검색/필터 ── */
+function filterClients() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.client-card[data-name]').forEach(c => {
+    const ok = c.dataset.name.toLowerCase().includes(q) &&
+               (aYear==='all' || (c.dataset.years||'').split(',').includes(aYear));
+    c.classList.toggle('hidden', !ok);
+  });
+}
+function filterYear(y, btn) {
+  aYear = y;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterClients();
+}
+function copyLink(e, url) {
+  e.preventDefault();
+  navigator.clipboard.writeText(url).then(() => alert('링크 복사됨:\n' + url));
+}
+
+/* ── ADD 카드 드래그앤드롭 ── */
+function acOver(e) {
+  e.preventDefault();
+  document.getElementById('addCard').classList.add('dov');
+  document.getElementById('acIc').textContent = '📄';
+  document.getElementById('acTi').textContent = '여기에 놓으세요';
+  document.getElementById('acSb').textContent = '.html 파일을 드롭하세요';
+}
+function acLeave() {
+  document.getElementById('addCard').classList.remove('dov');
+  document.getElementById('acIc').textContent = '＋';
+  document.getElementById('acTi').textContent = '새 고객사 보고서 추가';
+  document.getElementById('acSb').innerHTML   = 'HTML 파일을 드래그하거나<br>클릭하여 업로드하세요';
+}
+function acDrop(e) {
+  e.preventDefault(); acLeave();
+  const f = e.dataTransfer.files[0];
+  if (!f) return;
+  openM('client');
+  setTimeout(() => fSel(f), 60);
+}
+
+/* ══════════════════════════════════════════
+   업로드 모달
+   ══════════════════════════════════════════ */
+function openM(mode, folder, label) {
+  mMode = mode || 'client'; mFld = folder || ''; mFldLbl = label || '';
+
+  if (mMode === 'year') {
+    document.getElementById('mTi').textContent     = `새 연도 보고서 — ${mFldLbl}`;
+    document.getElementById('mCl').value           = mFld;
+    document.getElementById('mCl').readOnly        = true;
+    document.getElementById('mCl').style.cssText   = 'background:#f4f6f9;color:var(--muted)';
+    document.getElementById('mRegR').style.display = 'none';
+  } else {
+    document.getElementById('mTi').textContent     = '새 고객사 보고서 추가';
+    document.getElementById('mCl').value           = '';
+    document.getElementById('mCl').readOnly        = false;
+    document.getElementById('mCl').style.cssText   = '';
+    document.getElementById('mRegR').style.display = '';
+  }
+
+  const saved = localStorage.getItem('whion_gh_token');
+  if (saved && !document.getElementById('tokIn').value) {
+    document.getElementById('tokIn').value = saved;
+    tokVer(true);
+  }
+
+  resetM();
+  document.getElementById('ov').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeM() {
+  document.getElementById('ov').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function ovClick(e) { if (e.target === document.getElementById('ov')) closeM(); }
+function resetM() {
+  fClr();
+  ['pbox','pgw','logb','okb'].forEach(id => document.getElementById(id).classList.remove('on'));
+  document.getElementById('logb').innerHTML = '';
+  chkReady();
+}
+
+/* ── 토큰 ── */
+function tokReset() { tokOK = false; document.getElementById('tokIn').classList.remove('tok-ok','tok-err'); setTM('',''); chkReady(); }
+async function tokVer(silent) {
+  const tok = document.getElementById('tokIn').value.trim();
+  if (!tok) return;
+  if (!silent) setTM('var(--muted)','인증 중...');
+  try {
+    const r = await fetch(`${API}/repos/${OWNER}/${REPO}`, {
+      headers: { Authorization:`Bearer ${tok}`, 'X-GitHub-Api-Version':'2022-11-28' }
+    });
+    if (r.ok) {
+      tokOK = true;
+      document.getElementById('tokIn').classList.add('tok-ok');
+      document.getElementById('tokIn').classList.remove('tok-err');
+      setTM('var(--green)','✓ 인증 성공 — 저장소 접근 확인됨');
+    } else {
+      tokOK = false;
+      document.getElementById('tokIn').classList.add('tok-err');
+      document.getElementById('tokIn').classList.remove('tok-ok');
+      setTM('var(--red)','✗ 인증 실패 — 토큰 확인 (repo 권한 필요)');
+    }
+  } catch(e) { setTM('var(--red)','✗ 네트워크 오류'); }
+  chkReady();
+}
+function setTM(color, msg) { const el=document.getElementById('tokMsg'); el.style.color=color; el.textContent=msg; }
+function tokSave() {
+  const tok=document.getElementById('tokIn').value.trim(), sv=localStorage.getItem('whion_gh_token');
+  if (sv===tok) { localStorage.removeItem('whion_gh_token'); setTM('var(--muted)','토큰 삭제됨'); }
+  else          { localStorage.setItem('whion_gh_token',tok); setTM('var(--green)','✓ 브라우저에 저장됨'); }
+}
+
+/* ── 드롭존 ── */
+function dzOv(e) { e.preventDefault(); document.getElementById('dz').classList.add('dov'); }
+function dzLv()  { document.getElementById('dz').classList.remove('dov'); }
+function dzDp(e) { e.preventDefault(); dzLv(); fSel(e.dataTransfer.files[0]); }
+
+function fSel(f) {
+  if (!f) return;
+  if (!f.name.endsWith('.html')) { alert('.html 파일만 업로드 가능합니다.'); return; }
+  curFile = f;
+  document.getElementById('dz').classList.add('done');
+  document.getElementById('dzIc').textContent = '✅';
+  document.getElementById('dzMn').textContent = '파일 선택됨';
+  document.getElementById('dzSb').textContent = '다른 파일로 바꾸려면 클릭';
+  document.getElementById('fpNm').textContent = f.name;
+  document.getElementById('fpSz').textContent = fmtB(f.size);
+  document.getElementById('fpill').classList.add('on');
+  if (mMode === 'client' && !document.getElementById('mCl').value) {
+    document.getElementById('mCl').value =
+      f.name.replace(/[_-]?\d{4}\.html$/i,'').replace(/\.html$/i,'').replace(/_/g,' ').trim();
+  }
+  mUpd();
+}
+function fClr() {
+  curFile = null;
+  document.getElementById('dz').classList.remove('done','dov');
+  document.getElementById('dzIc').textContent = '📄';
+  document.getElementById('dzMn').textContent = '파일을 드래그하거나 클릭';
+  document.getElementById('dzSb').textContent = '.html 파일만 가능합니다';
+  document.getElementById('fpill').classList.remove('on');
+  document.getElementById('fIn').value = '';
+  document.getElementById('pbox').classList.remove('on');
+  chkReady();
+}
+
+function mUpd() {
+  const cl=document.getElementById('mCl').value.trim(), yr=document.getElementById('mYr').value.trim();
+  if (cl && yr && curFile) {
+    document.getElementById('pVal').textContent = `${cl}/${yr}.html`;
+    document.getElementById('pUrl').textContent = `${BASE}/${encodeURIComponent(cl)}/${yr}.html`;
+    document.getElementById('pbox').classList.add('on');
+  } else { document.getElementById('pbox').classList.remove('on'); }
+  chkReady();
+}
+function chkReady() {
+  const cl=document.getElementById('mCl').value.trim(), yr=document.getElementById('mYr').value.trim();
+  document.getElementById('upBtn').disabled = !(tokOK && curFile && cl && yr);
+}
+
+/* ══════════════════════════════════════════
+   업로드 실행
+   ══════════════════════════════════════════ */
+async function doUp() {
+  const tok = document.getElementById('tokIn').value.trim();
+  const cl  = document.getElementById('mCl').value.trim();
+  const yr  = document.getElementById('mYr').value.trim();
+  const reg = document.getElementById('mReg').value.trim();
+
+  showLog(); setP(10, '파일 읽는 중...');
+  aLog('i', `업로드 시작: ${cl}/${yr}.html`);
+
+  const b64  = await toB64(curFile);
+  const path = `${encodeURIComponent(cl)}/${yr}.html`;
+  const hdrs = { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' };
+  const api  = `${API}/repos/${OWNER}/${REPO}/contents/${path}`;
+
+  aLog('k', `파일 읽기 완료 (${fmtB(curFile.size)})`); setP(30, 'SHA 확인 중...');
+
+  // STEP 1: SHA 확인
+  let sha = null;
+  try {
+    const c = await fetch(api, { headers: hdrs });
+    if (c.ok) { sha = (await c.json()).sha; aLog('w', `기존 파일 덮어쓰기 (SHA: ${sha.slice(0,8)}...)`); }
+    else aLog('i', '신규 파일 생성');
+  } catch(e) {}
+
+  // STEP 2: 고객사 HTML 업로드
+  setP(55, 'GitHub에 고객사 파일 업로드 중...');
+  const body = { message: `📊 ${cl} ${yr}년도 법인세 보고서 업로드`, content: b64, branch: BR };
+  if (sha) body.sha = sha;
+
+  try {
+    const res  = await fetch(api, { method: 'PUT', headers: hdrs, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) { setP(0,'실패'); aLog('e', `업로드 실패 HTTP ${res.status}: ${data.message||''}`); return; }
+    aLog('k', `✓ 고객사 파일 업로드 성공! 커밋: ${data.commit.sha.slice(0,7)}`);
+
+    // 삭제 블랙리스트에서 제거 (재등록 허용)
+    removeFromDeleted(cl);
+  } catch(e) { setP(0,'오류'); aLog('e', '네트워크 오류: '+e.message); return; }
+
+  setP(100, '완료!');
+  aLog('i', `배포 URL: ${BASE}/${path}`);
+  aLog('i', 'GitHub Pages 반영까지 약 30초~2분 소요');
+
+  const finalUrl = `${BASE}/${path}`;
+  document.getElementById('okU').textContent = finalUrl;
+  document.getElementById('okU').href  = finalUrl;
+  document.getElementById('okBtn').href = finalUrl;
+  document.getElementById('okb').classList.add('on');
+
+  // DOM에 카드 즉시 반영 (페이지 리로드 없이)
+  insertCardDOM(cl, yr, finalUrl, reg);
+  closeM();
+  setTimeout(closeM, 200);
+}
+
+/* ── DOM에 카드/연도 즉시 삽입 ── */
+function insertCardDOM(cl, yr, url, reg) {
+  const grid = document.getElementById('cGrid');
+  const addC = document.getElementById('addCard');
+
+  if (mMode === 'year') {
+    const card = document.querySelector(`.client-card[data-name="${mFld}"]`);
+    if (card) {
+      const row = document.createElement('div');
+      row.className = 'year-row';
+      row.innerHTML = `
+        <a class="year-item" href="${url}" target="_blank" data-year="${yr}"
+           oncontextmenu="copyLink(event,'${url}')">
+          <div class="year-left"><span class="year-badge">${yr}</span><span class="year-desc">법인세 및 결산 분석 보고서</span></div>
+          <div class="year-right"><span class="status-dot live"></span><span class="link-icon">↗</span></div>
+        </a>
+        <button class="btn-del-year" title="${yr}년 보고서 삭제"
+          onclick="openDelM('year','${mFld}','${yr}',this.closest('.year-row'))">🗑</button>`;
+      card.querySelector('.year-list').appendChild(row);
+      card.dataset.years = (card.dataset.years ? card.dataset.years+',' : '') + yr;
+    }
+  } else {
+    const av = cl.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || cl.slice(0,2);
+    const el = document.createElement('div');
+    el.className = 'client-card';
+    el.dataset.name = cl;
+    el.dataset.years = yr;
+    el.innerHTML = `
+      <button class="btn-del-card" title="고객사 전체 삭제"
+        onclick="openDelM('client','${cl}','',this.closest('.client-card'))">🗑</button>
+      <div class="card-header">
+        <div class="client-avatar">${av}</div>
+        <div><div class="client-name">${cl}</div><div class="client-reg">${reg||'—'}</div></div>
+      </div>
+      <div class="card-body">
+        <div class="year-list">
+          <div class="year-row">
+            <a class="year-item" href="${url}" target="_blank" data-year="${yr}"
+               oncontextmenu="copyLink(event,'${url}')">
+              <div class="year-left"><span class="year-badge">${yr}</span><span class="year-desc">법인세 및 결산 분석 보고서</span></div>
+              <div class="year-right"><span class="status-dot live"></span><span class="link-icon">↗</span></div>
+            </a>
+            <button class="btn-del-year" title="${yr}년 보고서 삭제"
+              onclick="openDelM('year','${cl}','${yr}',this.closest('.year-row'))">🗑</button>
+          </div>
+        </div>
+        <button class="add-year" onclick="openM('year','${cl}','${cl}')">＋ 새 연도 보고서 추가</button>
+      </div>`;
+    grid.insertBefore(el, addC);
+  }
+  updateStats();
+}
+
+/* ══════════════════════════════════════════
+   삭제 모달
+   ══════════════════════════════════════════ */
+function openDelM(mode, folder, year, el) {
+  delMode   = mode;
+  delFolder = folder;
+  delYear   = year;
+
+  if (mode === 'year') {
+    delRowEl  = el;
+    delCardEl = null;
+    document.getElementById('delTi').textContent     = '연도 보고서 삭제';
+    document.getElementById('delDesc').textContent   = '해당 연도 보고서 파일을 GitHub에서 삭제합니다. 이 작업은 되돌릴 수 없습니다.';
+    document.getElementById('delTarget').textContent = `📄 ${folder} / ${year}.html`;
+  } else {
+    delCardEl = el;
+    delRowEl  = null;
+    document.getElementById('delTi').textContent     = '고객사 전체 삭제';
+    document.getElementById('delDesc').textContent   = '해당 고객사의 모든 보고서 파일을 GitHub에서 삭제합니다. 이 작업은 되돌릴 수 없습니다.';
+    document.getElementById('delTarget').textContent = `🏢 ${folder} 폴더 전체`;
+  }
+
+  document.getElementById('delLogb').innerHTML = '';
+  document.getElementById('delLogb').classList.remove('on');
+  document.getElementById('delPgw').classList.remove('on');
+  document.getElementById('delBtn').disabled = false;
+  document.getElementById('delOv').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDelM() {
+  document.getElementById('delOv').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function delOvClick(e) { if (e.target === document.getElementById('delOv')) closeDelM(); }
+
+function dLog(t, msg) {
+  const box = document.getElementById('delLogb');
+  box.classList.add('on');
+  const ic  = {k:'✓',e:'✗',i:'·',w:'⚠'}[t]||'·';
+  const cls = {k:'lk',e:'le',i:'li',w:'lw'}[t]||'li';
+  const sp  = document.createElement('span');
+  sp.className = cls;
+  sp.textContent = `[${new Date().toLocaleTimeString('ko-KR')}] ${ic} ${msg}`;
+  box.appendChild(sp); box.scrollTop = box.scrollHeight;
+}
+function setDP(pct, lbl) {
+  document.getElementById('delPgw').classList.add('on');
+  document.getElementById('delPgf').style.width = pct + '%';
+  document.getElementById('delPgl').textContent = lbl;
+}
+
+/* ── 삭제 실행 ── */
+async function doDelete() {
+  document.getElementById('delBtn').disabled = true;
+  const tok = localStorage.getItem('whion_gh_token') || document.getElementById('tokIn').value.trim();
+  if (!tok) { alert('GitHub 토큰을 먼저 인증하세요.\n업로드 모달에서 토큰을 입력하고 💾 저장 후 삭제를 시도해주세요.'); document.getElementById('delBtn').disabled = false; return; }
+
+  const hdrs = { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' };
+
+  if (delMode === 'year') {
+    // ── 단일 연도 파일 삭제 ──
+    const path = `${encodeURIComponent(delFolder)}/${delYear}.html`;
+    setDP(20, 'SHA 확인 중...');
+    dLog('i', `삭제 대상: ${delFolder}/${delYear}.html`);
+
+    try {
+      const fr   = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, { headers: hdrs });
+      if (!fr.ok) throw new Error('파일을 찾을 수 없습니다');
+      const fd   = await fr.json();
+      const sha  = fd.sha;
+
+      setDP(60, 'GitHub에서 파일 삭제 중...');
+      const dr = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, {
+        method: 'DELETE', headers: hdrs,
+        body: JSON.stringify({ message: `🗑 ${delFolder} ${delYear}년 보고서 삭제`, sha, branch: BR })
+      });
+      if (!dr.ok) {
+        const dd = await dr.json();
+        throw new Error(`삭제 실패: ${dd.message}`);
+      }
+
+      setDP(100, '삭제 완료!');
+      dLog('k', '✓ 파일 삭제 완료');
+
+      // 삭제 블랙리스트에 등록 (새로고침 시 재출현 방지)
+      addToDeleted(delFolder, delYear);
+
+      // DOM에서 연도 행 제거
+      if (delRowEl) {
+        const card = delRowEl.closest('.client-card');
+        delRowEl.remove();
+        // 연도가 하나도 없으면 카드도 제거 + 폴더 전체 블랙리스트 등록
+        if (card && card.querySelectorAll('.year-row').length === 0) {
+          addToDeleted(delFolder);
+          card.remove();
+        } else if (card) {
+          const remaining = [...card.querySelectorAll('.year-item')].map(a => a.dataset.year);
+          card.dataset.years = remaining.join(',');
+        }
+        updateStats();
+      }
+
+      setTimeout(closeDelM, 1200);
+    } catch(e) {
+      setDP(0, '오류');
+      dLog('e', e.message);
+      document.getElementById('delBtn').disabled = false;
+    }
+
+  } else {
+    // ── 고객사 폴더 전체 삭제 ──
+    setDP(10, '파일 목록 조회 중...');
+    dLog('i', `${delFolder} 폴더 전체 삭제 시작`);
+
+    try {
+      const fr    = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(delFolder)}`, { headers: hdrs });
+      if (!fr.ok) throw new Error('폴더를 찾을 수 없습니다');
+      const files = await fr.json();
+
+      const htmlFiles = files.filter(f => f.type === 'file');
+      dLog('i', `총 ${htmlFiles.length}개 파일 삭제 예정`);
+
+      for (let i = 0; i < htmlFiles.length; i++) {
+        const f = htmlFiles[i];
+        setDP(10 + Math.round((i / htmlFiles.length) * 80), `${f.name} 삭제 중...`);
+        const dr = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(delFolder)}/${f.name}`, {
+          method: 'DELETE', headers: hdrs,
+          body: JSON.stringify({ message: `🗑 ${delFolder} ${f.name} 삭제`, sha: f.sha, branch: BR })
+        });
+        if (!dr.ok) {
+          const dd = await dr.json();
+          dLog('w', `${f.name} 삭제 실패: ${dd.message}`);
+        } else {
+          dLog('k', `${f.name} 삭제 완료`);
+        }
+      }
+
+      setDP(100, '전체 삭제 완료!');
+      dLog('k', '✓ 고객사 폴더 전체 삭제 완료');
+
+      // 삭제 블랙리스트에 등록 (새로고침 시 재출현 방지)
+      addToDeleted(delFolder);
+
+      // DOM에서 카드 제거
+      if (delCardEl) {
+        delCardEl.remove();
+        updateStats();
+      }
+
+      setTimeout(closeDelM, 1200);
+    } catch(e) {
+      setDP(0, '오류');
+      dLog('e', e.message);
+      document.getElementById('delBtn').disabled = false;
+    }
+  }
+}
+
+/* ── 유틸 ── */
+function toB64(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(f); }); }
+function fmtB(b){ if(b<1024) return b+'B'; if(b<1048576) return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(2)+'MB'; }
+function showLog(){ document.getElementById('logb').classList.add('on'); }
+function aLog(t, msg){
+  const box=document.getElementById('logb');
+  const ts=new Date().toLocaleTimeString('ko-KR');
+  const ic={k:'✓',e:'✗',i:'·',w:'⚠'}[t]||'·';
+  const cls={k:'lk',e:'le',i:'li',w:'lw'}[t]||'li';
+  const sp=document.createElement('span'); sp.className=cls; sp.textContent=`[${ts}] ${ic} ${msg}`;
+  box.appendChild(sp); box.scrollTop=box.scrollHeight;
+}
+function setP(pct, lbl){
+  document.getElementById('pgw').classList.add('on');
+  document.getElementById('pgf').style.width=pct+'%';
+  document.getElementById('pgl').textContent=lbl;
+  if(pct>=100||pct===0) setTimeout(()=>document.getElementById('pgw').classList.remove('on'),2200);
+}
+
+/* ── 초기화 ── */
+window.addEventListener('load', () => {
+  const s = localStorage.getItem('whion_gh_token');
+  if (s) document.getElementById('tokIn').value = s;
+  loadClients();  // GitHub에서 고객사 목록 동적 로딩
+});
+</script>
+</body>
+</html>
