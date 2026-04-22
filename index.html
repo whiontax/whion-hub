@@ -415,35 +415,14 @@ async function ghDel(path, sha, message) {
 /* ══════════════════════════════════════════
    페이지 로드: GitHub에서 고객사 목록 동적 로딩
    ══════════════════════════════════════════ */
-/* ── localStorage 삭제 블랙리스트 관리 ── */
-function getDeletedList() {
-  try { return JSON.parse(localStorage.getItem('whion_deleted') || '[]'); } catch(e) { return []; }
-}
-function addToDeleted(folder, year) {
-  const list = getDeletedList();
-  const key  = year ? `${folder}/${year}` : folder;
-  if (!list.includes(key)) { list.push(key); localStorage.setItem('whion_deleted', JSON.stringify(list)); }
-}
-function removeFromDeleted(folder) {
-  // 업로드 성공 시 블랙리스트에서 제거 (재등록 허용)
-  const list = getDeletedList().filter(k => !k.startsWith(folder));
-  localStorage.setItem('whion_deleted', JSON.stringify(list));
-}
-function isDeletedClient(folder) {
-  return getDeletedList().includes(folder);
-}
-function isDeletedYear(folder, year) {
-  return getDeletedList().includes(`${folder}/${year}`);
-}
+/* GitHub 저장소가 유일한 데이터 소스 — localStorage 블랙리스트 개념 없음 */
 
 async function loadClients() {
-  const ts      = Date.now();
-  const deleted = getDeletedList();
-  const tok     = localStorage.getItem('whion_gh_token');
+  const ts  = Date.now();
+  const tok = localStorage.getItem('whion_gh_token');
 
   console.log('%c[포털] loadClients 시작', 'color:#c8973a;font-weight:bold');
   console.log('[포털] 토큰 저장 여부:', tok ? '✓ 있음' : '✗ 없음');
-  console.log('[포털] 삭제 블랙리스트:', deleted);
 
   // GitHub API 헤더 (Cache-Control 없음 — preflight CORS 방지)
   const hdrs = { 'X-GitHub-Api-Version': '2022-11-28' };
@@ -479,11 +458,9 @@ async function loadClients() {
     const items = await r.json();
     console.log('[포털] 저장소 루트 항목 수:', items.length);
 
-    // STEP 2. 고객사 폴더 필터링
+    // STEP 2. 고객사 폴더 필터링 (GitHub 저장소 상태만이 유일한 기준)
     const folders = items.filter(i =>
-      i.type === 'dir' &&
-      !i.name.startsWith('.') &&
-      !deleted.includes(i.name)
+      i.type === 'dir' && !i.name.startsWith('.')
     );
     console.log('[포털] 유효 고객사 폴더:', folders.map(f => f.name));
 
@@ -504,11 +481,9 @@ async function loadClients() {
         }
         const files = await fr.json();
 
-        // 4자리 연도.html만 인정
+        // 4자리 연도.html만 인정 (GitHub 저장소 상태가 유일한 기준)
         const htmlFiles = files.filter(f =>
-          f.type === 'file' &&
-          /^\d{4}\.html$/.test(f.name) &&
-          !deleted.includes(`${folder.name}/${f.name.replace('.html','')}`)
+          f.type === 'file' && /^\d{4}\.html$/.test(f.name)
         );
         if (htmlFiles.length === 0) {
           console.log(`[포털] ${folder.name}: 유효 HTML 없음 (스킵)`);
@@ -851,9 +826,6 @@ async function doUp() {
     const data = await res.json();
     if (!res.ok) { setP(0,'실패'); aLog('e', `업로드 실패 HTTP ${res.status}: ${data.message||''}`); return; }
     aLog('k', `✓ 고객사 파일 업로드 성공! 커밋: ${data.commit.sha.slice(0,7)}`);
-
-    // 삭제 블랙리스트에서 제거 (재등록 허용)
-    removeFromDeleted(cl);
   } catch(e) { setP(0,'오류'); aLog('e', '네트워크 오류: '+e.message); return; }
 
   setP(100, '완료!');
@@ -866,10 +838,12 @@ async function doUp() {
   document.getElementById('okBtn').href = finalUrl;
   document.getElementById('okb').classList.add('on');
 
-  // DOM에 카드 즉시 반영 (페이지 리로드 없이)
+  // DOM에 카드 즉시 반영 (시각적 피드백)
   insertCardDOM(cl, yr, finalUrl, reg);
   closeM();
-  setTimeout(closeM, 200);
+
+  // 3초 후 GitHub에서 실제 상태 재조회 → UI 일치 보장
+  setTimeout(() => { loadClients(); }, 3000);
 }
 
 /* ── DOM에 카드/연도 즉시 삽입 ── */
@@ -1008,17 +982,13 @@ async function doDelete() {
 
       setDP(100, '삭제 완료!');
       dLog('k', '✓ 파일 삭제 완료');
+      dLog('i', 'GitHub 캐시 반영까지 약 30초~1분 소요');
 
-      // 삭제 블랙리스트에 등록 (새로고침 시 재출현 방지)
-      addToDeleted(delFolder, delYear);
-
-      // DOM에서 연도 행 제거
+      // DOM에서 연도 행 즉시 제거 (시각적 피드백, 다음 새로고침 시 GitHub 상태로 재확인됨)
       if (delRowEl) {
         const card = delRowEl.closest('.client-card');
         delRowEl.remove();
-        // 연도가 하나도 없으면 카드도 제거 + 폴더 전체 블랙리스트 등록
         if (card && card.querySelectorAll('.year-row').length === 0) {
-          addToDeleted(delFolder);
           card.remove();
         } else if (card) {
           const remaining = [...card.querySelectorAll('.year-item')].map(a => a.dataset.year);
@@ -1027,7 +997,11 @@ async function doDelete() {
         updateStats();
       }
 
-      setTimeout(closeDelM, 1200);
+      setTimeout(() => {
+        closeDelM();
+        // 3초 후 GitHub에서 실제 상태 재조회 → UI 일치 보장
+        setTimeout(() => loadClients(), 3000);
+      }, 1200);
     } catch(e) {
       setDP(0, '오류');
       dLog('e', e.message);
@@ -1064,17 +1038,19 @@ async function doDelete() {
 
       setDP(100, '전체 삭제 완료!');
       dLog('k', '✓ 고객사 폴더 전체 삭제 완료');
+      dLog('i', 'GitHub 캐시 반영까지 약 30초~1분 소요');
 
-      // 삭제 블랙리스트에 등록 (새로고침 시 재출현 방지)
-      addToDeleted(delFolder);
-
-      // DOM에서 카드 제거
+      // DOM에서 카드 즉시 제거 (시각적 피드백, 다음 새로고침 시 GitHub 상태로 재확인됨)
       if (delCardEl) {
         delCardEl.remove();
         updateStats();
       }
 
-      setTimeout(closeDelM, 1200);
+      setTimeout(() => {
+        closeDelM();
+        // 3초 후 GitHub에서 실제 상태 재조회 → UI 일치 보장
+        setTimeout(() => loadClients(), 3000);
+      }, 1200);
     } catch(e) {
       setDP(0, '오류');
       dLog('e', e.message);
@@ -1104,6 +1080,11 @@ function setP(pct, lbl){
 
 /* ── 초기화 ── */
 window.addEventListener('load', () => {
+  // 이전 버전에서 남아있을 수 있는 블랙리스트 데이터 자동 정리
+  if (localStorage.getItem('whion_deleted')) {
+    localStorage.removeItem('whion_deleted');
+    console.log('[포털] 이전 버전 블랙리스트 데이터 자동 정리됨');
+  }
   const s = localStorage.getItem('whion_gh_token');
   if (s) document.getElementById('tokIn').value = s;
   loadClients();  // GitHub에서 고객사 목록 동적 로딩
