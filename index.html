@@ -769,20 +769,40 @@ function dzDp(e) { e.preventDefault(); dzLv(); fSel(e.dataTransfer.files[0]); }
 /* ── HTML 파일에서 메타태그 자동 추출 ── */
 async function extractMetaFromFile(file) {
   try {
-    // 파일 앞 16KB만 읽으면 <head>까지 충분히 커버됨
-    const blob = file.slice(0, 16384);
+    // 파일 앞 64KB 읽음 (메타태그는 head, 상호는 body 초반부에 있을 수 있어 충분히 확보)
+    const blob = file.slice(0, 65536);
     const text = await blob.text();
     const m = (name) => {
       const re = new RegExp(`<meta\\s+name="${name}"\\s+content="([^"]+)"`, 'i');
       const r = text.match(re);
       return r ? r[1].trim() : '';
     };
-    return {
+
+    // 메타태그에서 기본값 추출
+    const meta = {
       name: m('client-name'),
       reg:  m('client-reg'),
       ceo:  m('client-ceo'),
       year: m('report-year')
     };
+
+    // ★ 폴백: 본문에서 .biz-name 클래스로 실제 상호 추출
+    // (개인사업자 보고서에서 client-name이 대표자명으로 잘못 들어간 경우 보완)
+    const bizMatch = text.match(/<div\s+class="biz-name"[^>]*>([^<]+)<\/div>/i);
+    if (bizMatch) {
+      // 괄호 안의 영문/추가 표기 제거 (예: "물판 (Mulpan)" → "물판")
+      const bizName = bizMatch[1].replace(/\s*\([^)]*\)\s*$/, '').trim();
+      if (bizName) {
+        // 상호가 본문에 있으면 무조건 본문 값 우선 사용
+        // (메타태그가 대표자명·법인명 등으로 잘못 들어간 경우를 모두 정정)
+        if (meta.name !== bizName) {
+          console.log(`[포털] 본문 상호 발견 → 폴더명 보정: "${meta.name}" → "${bizName}"`);
+        }
+        meta.name = bizName;
+      }
+    }
+
+    return meta;
   } catch(e) {
     console.warn('[포털] 메타태그 추출 실패:', e);
     return { name:'', reg:'', ceo:'', year:'' };
