@@ -576,7 +576,25 @@ function renderGrid(clients) {
   const grid = document.getElementById('cGrid');
   grid.innerHTML = '';
 
-  // 고객사 카드 생성
+  // ★ addCard를 그리드 첫 칸에 먼저 추가 ★
+  const addCard = document.createElement('div');
+  addCard.className = 'client-card';
+  addCard.id = 'addCard';
+  addCard.onclick = () => openM('client');
+  addCard.ondragover = acOver;
+  addCard.ondragleave = acLeave;
+  addCard.ondrop = acDrop;
+  addCard.innerHTML = `
+    <div class="card-header" style="border:none;justify-content:center;padding:2.4rem 1.25rem;">
+      <div style="text-align:center;pointer-events:none;">
+        <div style="font-size:36px;margin-bottom:10px" id="acIc">＋</div>
+        <div style="font-size:14px;font-weight:600;color:var(--muted)" id="acTi">새 고객사 보고서 추가</div>
+        <div style="font-size:12px;color:#a0aec0;margin-top:5px;line-height:1.65" id="acSb">HTML 파일을 드래그하거나<br>클릭하여 업로드하세요</div>
+      </div>
+    </div>`;
+  grid.appendChild(addCard);
+
+  // 고객사 카드 생성 (addCard 뒤에 추가됨)
   clients.forEach(c => {
     const av = c.displayName.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || c.displayName.slice(0,2);
     const yearsAttr = c.years.join(',');
@@ -618,24 +636,6 @@ function renderGrid(clients) {
 
     grid.appendChild(card);
   });
-
-  // addCard 추가
-  const addCard = document.createElement('div');
-  addCard.className = 'client-card';
-  addCard.id = 'addCard';
-  addCard.onclick = () => openM('client');
-  addCard.ondragover = acOver;
-  addCard.ondragleave = acLeave;
-  addCard.ondrop = acDrop;
-  addCard.innerHTML = `
-    <div class="card-header" style="border:none;justify-content:center;padding:2.4rem 1.25rem;">
-      <div style="text-align:center;pointer-events:none;">
-        <div style="font-size:36px;margin-bottom:10px" id="acIc">＋</div>
-        <div style="font-size:14px;font-weight:600;color:var(--muted)" id="acTi">새 고객사 보고서 추가</div>
-        <div style="font-size:12px;color:#a0aec0;margin-top:5px;line-height:1.65" id="acSb">HTML 파일을 드래그하거나<br>클릭하여 업로드하세요</div>
-      </div>
-    </div>`;
-  grid.appendChild(addCard);
 
   updateStats();
 }
@@ -989,7 +989,7 @@ function insertCardDOM(cl, yr, url, reg) {
         </div>
         <button class="add-year" onclick="openM('year','${cl}','${cl}')">＋ 새 연도 보고서 추가</button>
       </div>`;
-    grid.insertBefore(el, addC);
+    grid.insertBefore(el, addC.nextSibling);
   }
   updateStats();
 }
