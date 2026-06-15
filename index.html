@@ -1064,7 +1064,7 @@ async function extractMetaFromFile(file) {
       return r ? r[1].trim() : '';
     };
     const meta = {
-      name: m('client-name'),
+      name: m('client-biz') || m('client-name'),
       reg:  m('client-reg'),
       ceo:  m('client-ceo'),
       year: m('report-year')
