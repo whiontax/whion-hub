@@ -601,6 +601,54 @@
     margin-top: 4px; letter-spacing: 0.5px;
   }
 
+  /* 보고서 유형 — 성실 아바타(금색) */
+  .client-avatar.sincere {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+  }
+  /* 카드 유형 배지 */
+  .type-badge {
+    display: inline-block; vertical-align: middle;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+    padding: 2px 8px; border-radius: 7px; margin-left: 8px;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .type-badge.corporate  { color:#4338ca; background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25); }
+  .type-badge.individual { color:#be185d; background:rgba(236,72,153,0.10); border-color:rgba(236,72,153,0.22); }
+  .type-badge.sincere    { color:#b45309; background:rgba(245,158,11,0.16); border-color:rgba(245,158,11,0.35); }
+
+  /* 유형 필터 행 */
+  .toolbar-types { margin-top: -0.75rem; }
+  .filter-group-label {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    letter-spacing: 0.5px; margin-right: 2px; align-self: center; white-space: nowrap;
+  }
+
+  /* 모달 유형 세그먼트 선택기 */
+  .type-seg { display: flex; gap: 8px; }
+  .tseg {
+    flex: 1; padding: 11px 0;
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 11px;
+    font-size: 13px; font-weight: 600; color: var(--text-soft);
+    cursor: pointer; font-family: inherit; transition: all .2s;
+  }
+  .tseg:hover { background: rgba(255,255,255,0.95); }
+  .tseg.active {
+    color: #fff; border-color: transparent;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+  }
+  .tseg.active[data-type="sincere"] {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+  }
+  .tseg.active[data-type="individual"] {
+    background: linear-gradient(135deg, #f472b6, #ec4899);
+    box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+  }
+
   @media(max-width:640px){
     .hero h1 { font-size: 26px; }
     .stats { grid-template-columns:1fr 1fr; }
@@ -642,9 +690,17 @@
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="상호 · 대표자 · 사업자번호로 검색..." oninput="filterClients()">
     </div>
-    <button class="filter-btn active" onclick="filterYear('all',this)">전체</button>
-    <button class="filter-btn" onclick="filterYear('2025',this)">2025</button>
-    <button class="filter-btn" onclick="filterYear('2024',this)">2024</button>
+    <button class="filter-btn year-btn active" onclick="filterYear('all',this)">전체</button>
+    <button class="filter-btn year-btn" onclick="filterYear('2025',this)">2025</button>
+    <button class="filter-btn year-btn" onclick="filterYear('2024',this)">2024</button>
+  </div>
+
+  <div class="toolbar toolbar-types">
+    <span class="filter-group-label">📋 보고서 유형</span>
+    <button class="filter-btn type-btn active" onclick="filterType('all',this)">전체</button>
+    <button class="filter-btn type-btn" onclick="filterType('individual',this)">개인</button>
+    <button class="filter-btn type-btn" onclick="filterType('sincere',this)">성실</button>
+    <button class="filter-btn type-btn" onclick="filterType('corporate',this)">법인</button>
   </div>
 
   <div class="stats">
@@ -686,6 +742,14 @@
         <div>
           <label class="ml">사업연도 <span style="color:var(--red)">*</span></label>
           <input type="number" class="mi" id="mYr" value="2025" min="2020" max="2035" oninput="mUpd()">
+        </div>
+      </div>
+      <div class="mf">
+        <label class="ml">보고서 유형 <span style="color:var(--red)">*</span> <span style="color:var(--text-light);font-weight:500">(성실은 자동인식 불가 — 직접 지정)</span></label>
+        <div class="type-seg" id="typeSeg">
+          <button type="button" class="tseg" data-type="individual" onclick="selType('individual')">개인</button>
+          <button type="button" class="tseg" data-type="sincere" onclick="selType('sincere')">성실</button>
+          <button type="button" class="tseg" data-type="corporate" onclick="selType('corporate')">법인</button>
         </div>
       </div>
       <div class="mf" id="mRegR">
@@ -760,20 +824,45 @@ const BR       = 'main';
 const BASE     = 'https://whiontax.github.io/tax-reports';
 const API      = 'https://api.github.com';
 
-let aYear = 'all', tokOK = false, curFile = null;
-let mMode = 'client', mFld = '', mFldLbl = '';
+let aYear = 'all', aType = 'all', tokOK = false, curFile = null;
+let mMode = 'client', mFld = '', mFldLbl = '', selectedType = 'individual';
 let delMode = '', delFolder = '', delYear = '', delCardEl = null, delRowEl = null;
 
+// ── 보고서 유형(개인/성실/법인) 관리 ──────────────────────────────
+// 성실신고확인대상(성실사업자)은 사업자/주민등록번호 형식이 일반 개인과 동일해
+// 번호만으로는 자동 구분이 불가능하다. 따라서 아래 우선순위로 "명시적" 관리한다.
+//   1순위) 보고서 HTML의 <meta name="report-type" content="성실|개인|법인">
+//   2순위) SINCERE_FOLDERS override (메타가 없는 기존 파일용)
+//   3순위) 등록번호 자동판별 (법인/개인만 — 성실은 절대 자동분류되지 않음)
+const SINCERE_FOLDERS = ['넘버디', '모카', '이호민'];
+
+const TYPE_META = {
+  corporate:  { badge: '법인', cls: 'corporate',  report: '법인세 및 결산 분석 보고서' },
+  individual: { badge: '개인', cls: 'individual', report: '종소세 및 결산분석보고서' },
+  sincere:    { badge: '성실', cls: 'sincere',    report: '종소세(성실) 및 결산분석보고서' },
+};
+const RTYPE_ALIAS = { '성실':'sincere', sincere:'sincere', '개인':'individual', individual:'individual', '법인':'corporate', corporate:'corporate' };
+
+// 등록번호만으로 가능한 1차 분류 (개인 vs 법인)
 function getClientType(reg) {
   if (!reg) return 'corporate';
   if (/^\d{6}-?\d?[\d*]{6,7}/.test(reg.trim())) return 'individual';
   if (/^\d{3}-\d{2}-\d{5}/.test(reg.trim())) return 'corporate';
   return 'corporate';
 }
-function getReportLabel(reg) {
-  return getClientType(reg) === 'individual'
-    ? '종소세 및 결산분석보고서'
-    : '법인세 및 결산 분석 보고서';
+
+// 3분류 최종 판별: 'corporate' | 'individual' | 'sincere'
+function getReportType(c) {
+  c = c || {};
+  const explicit = RTYPE_ALIAS[(c.rtype || '').trim()];
+  if (explicit) return explicit;
+  const base = getClientType(c.reg);
+  if (base === 'individual' && SINCERE_FOLDERS.includes(c.folder)) return 'sincere';
+  return base;
+}
+
+function getReportLabel(c) {
+  return TYPE_META[getReportType(c)].report;
 }
 
 async function loadClients() {
@@ -818,24 +907,27 @@ async function loadClients() {
         const htmlFiles = files.filter(f => f.type === 'file' && /^\d{4}\.html$/.test(f.name));
         if (htmlFiles.length === 0) return null;
 
-        let reg = '', ceo = '', displayName = folder.name;
+        let reg = '', ceo = '', displayName = folder.name, rtype = '';
         try {
           const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BR}/${encodeURIComponent(folder.name)}/${htmlFiles[0].name}`;
           const rr = await fetchWithTimeout(rawUrl, {}, 8000);
           if (rr.ok) {
             const text = (await rr.text()).slice(0, 8192);
-            const regM  = text.match(/<meta\s+name="client-reg"\s+content="([^"]+)"/i);
-            const ceoM  = text.match(/<meta\s+name="client-ceo"\s+content="([^"]+)"/i);
-            const nameM = text.match(/<meta\s+name="client-name"\s+content="([^"]+)"/i);
-            if (regM)  reg  = regM[1];
-            if (ceoM)  ceo  = ceoM[1];
-            if (nameM) displayName = nameM[1];
+            const regM   = text.match(/<meta\s+name="client-reg"\s+content="([^"]+)"/i);
+            const ceoM   = text.match(/<meta\s+name="client-ceo"\s+content="([^"]+)"/i);
+            const nameM  = text.match(/<meta\s+name="client-name"\s+content="([^"]+)"/i);
+            const typeM  = text.match(/<meta\s+name="report-type"\s+content="([^"]+)"/i);
+            if (regM)   reg  = regM[1];
+            if (ceoM)   ceo  = ceoM[1];
+            if (nameM)  displayName = nameM[1];
+            if (typeM)  rtype = typeM[1];
           }
         } catch(e) {}
 
         return {
           folder: folder.name,
           displayName,
+          rtype,
           reg: reg ? `${reg}${ceo ? ' · ' + ceo + ' 대표' : ''}` : '',
           years: htmlFiles.map(f => f.name.replace('.html','')).sort((a,b) => b-a)
         };
@@ -889,7 +981,8 @@ function renderGrid(clients) {
   grid.appendChild(addCard);
 
   clients.forEach(c => {
-    const isIndividual = getClientType(c.reg) === 'individual';
+    const rtype = getReportType(c);
+    const tm = TYPE_META[rtype];
     const av = c.displayName.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || c.displayName.slice(0,2);
     const yearsAttr = c.years.join(',');
 
@@ -897,9 +990,10 @@ function renderGrid(clients) {
     card.className = 'client-card';
     card.dataset.name = c.folder;
     card.dataset.years = yearsAttr;
+    card.dataset.type = rtype;
     card.dataset.search = [c.folder, c.displayName, c.reg].filter(Boolean).join(' ').toLowerCase();
 
-    const reportLabel = getReportLabel(c.reg);
+    const reportLabel = tm.report;
     const yearRowsHtml = c.years.map(yr => {
       const url = `${BASE}/${encodeURIComponent(c.folder)}/${yr}.html`;
       return `
@@ -918,8 +1012,8 @@ function renderGrid(clients) {
       <button class="btn-del-card" title="고객사 전체 삭제"
         onclick="openDelM('client','${c.folder}','',this.closest('.client-card'))">🗑</button>
       <div class="card-header">
-        <div class="client-avatar${isIndividual ? ' individual' : ''}">${av}</div>
-        <div><div class="client-name">${c.displayName}</div><div class="client-reg">${c.reg || '—'}</div></div>
+        <div class="client-avatar ${tm.cls}">${av}</div>
+        <div><div class="client-name">${c.displayName}<span class="type-badge ${tm.cls}">${tm.badge}</span></div><div class="client-reg">${c.reg || '—'}</div></div>
       </div>
       <div class="card-body">
         <div class="year-list">${yearRowsHtml}</div>
@@ -946,12 +1040,19 @@ function filterClients() {
     const haystack = (c.dataset.search || c.dataset.name || '').toLowerCase();
     const matchText = !q || haystack.includes(q);
     const matchYear = aYear === 'all' || (c.dataset.years || '').split(',').includes(aYear);
-    c.classList.toggle('hidden', !(matchText && matchYear));
+    const matchType = aType === 'all' || (c.dataset.type || 'corporate') === aType;
+    c.classList.toggle('hidden', !(matchText && matchYear && matchType));
   });
 }
 function filterYear(y, btn) {
   aYear = y;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterClients();
+}
+function filterType(t, btn) {
+  aType = t;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   filterClients();
 }
@@ -1017,6 +1118,7 @@ function resetM() {
   fClr();
   ['pbox','pgw','logb','okb'].forEach(id => document.getElementById(id).classList.remove('on'));
   document.getElementById('logb').innerHTML = '';
+  selType('individual');
   chkReady();
 }
 
@@ -1067,8 +1169,13 @@ async function extractMetaFromFile(file) {
       name: m('client-biz') || m('client-name'),
       reg:  m('client-reg'),
       ceo:  m('client-ceo'),
-      year: m('report-year')
+      year: m('report-year'),
+      rtype: m('report-type')
     };
+    // report-type 메타가 없으면 본문에서 성실신고확인 대상 경고배너로 성실 여부 자동 감지
+    if (!meta.rtype && /sincere-title"[^>]*>\s*성실신고확인\s*대상\s*[—–-]/.test(text)) {
+      meta.rtype = '성실';
+    }
     const bizMatch = text.match(/<div\s+class="biz-name"[^>]*>([^<]+)<\/div>/i);
     if (bizMatch) {
       const bizName = bizMatch[1].replace(/\s*\([^)]*\)\s*$/, '').trim();
@@ -1119,7 +1226,14 @@ async function fSel(f) {
   if (meta.year) {
     document.getElementById('mYr').value = meta.year;
   }
+  const detected = RTYPE_ALIAS[(meta.rtype || '').trim()]
+    || (getClientType(meta.reg) === 'corporate' ? 'corporate' : 'individual');
+  selType(detected);
   mUpd();
+}
+function selType(t) {
+  selectedType = t;
+  document.querySelectorAll('#typeSeg .tseg').forEach(b => b.classList.toggle('active', b.dataset.type === t));
 }
 function fClr() {
   curFile = null;
@@ -1156,7 +1270,19 @@ async function doUp() {
   showLog(); setP(10, '파일 읽는 중...');
   aLog('i', `업로드 시작: ${cl}/${yr}.html`);
 
-  const b64  = await toB64(curFile);
+  // 선택한 보고서 유형을 HTML head의 report-type 메타로 주입 → 파일 자체로 유형 식별 가능
+  const typeKor = { individual:'개인', sincere:'성실', corporate:'법인' }[selectedType] || '개인';
+  let html = await curFile.text();
+  const metaTag = `<meta name="report-type" content="${typeKor}">`;
+  if (/<meta\s+name="report-type"[^>]*>/i.test(html)) {
+    html = html.replace(/<meta\s+name="report-type"[^>]*>/i, metaTag);
+  } else if (/<meta\s+charset=[^>]*>/i.test(html)) {
+    html = html.replace(/(<meta\s+charset=[^>]*>)/i, `$1\n  ${metaTag}`);
+  } else {
+    html = html.replace(/(<head[^>]*>)/i, `$1\n  ${metaTag}`);
+  }
+  const b64  = btoa(unescape(encodeURIComponent(html)));
+  aLog('i', `보고서 유형: ${typeKor}`);
   const path = `${encodeURIComponent(cl)}/${yr}.html`;
   const hdrs = { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' };
   const api  = `${API}/repos/${OWNER}/${REPO}/contents/${path}`;
@@ -1203,7 +1329,7 @@ function insertCardDOM(cl, yr, url, reg) {
   if (mMode === 'year') {
     const card = document.querySelector(`.client-card[data-name="${mFld}"]`);
     if (card) {
-      const existingLabel = card.querySelector('.year-desc')?.textContent || getReportLabel(reg);
+      const existingLabel = card.querySelector('.year-desc')?.textContent || getReportLabel({ reg, folder: mFld, rtype: selectedType });
       const row = document.createElement('div');
       row.className = 'year-row';
       row.innerHTML = `
@@ -1218,20 +1344,22 @@ function insertCardDOM(cl, yr, url, reg) {
       card.dataset.years = (card.dataset.years ? card.dataset.years+',' : '') + yr;
     }
   } else {
-    const isIndividual = getClientType(reg) === 'individual';
+    const rtype = getReportType({ reg, folder: cl, rtype: selectedType });
+    const tm = TYPE_META[rtype];
     const av = cl.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || cl.slice(0,2);
-    const reportLabel = getReportLabel(reg);
+    const reportLabel = tm.report;
     const el = document.createElement('div');
     el.className = 'client-card';
     el.dataset.name = cl;
     el.dataset.years = yr;
+    el.dataset.type = rtype;
     el.dataset.search = [cl, reg].filter(Boolean).join(' ').toLowerCase();
     el.innerHTML = `
       <button class="btn-del-card" title="고객사 전체 삭제"
         onclick="openDelM('client','${cl}','',this.closest('.client-card'))">🗑</button>
       <div class="card-header">
-        <div class="client-avatar${isIndividual ? ' individual' : ''}">${av}</div>
-        <div><div class="client-name">${cl}</div><div class="client-reg">${reg||'—'}</div></div>
+        <div class="client-avatar ${tm.cls}">${av}</div>
+        <div><div class="client-name">${cl}<span class="type-badge ${tm.cls}">${tm.badge}</span></div><div class="client-reg">${reg||'—'}</div></div>
       </div>
       <div class="card-body">
         <div class="year-list">
