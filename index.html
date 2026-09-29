@@ -616,6 +616,24 @@
   .type-badge.corporate  { color:#4338ca; background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25); }
   .type-badge.individual { color:#be185d; background:rgba(236,72,153,0.10); border-color:rgba(236,72,153,0.22); }
   .type-badge.sincere    { color:#b45309; background:rgba(245,158,11,0.16); border-color:rgba(245,158,11,0.35); }
+  .type-badge.hospital   { color:#0f766e; background:rgba(20,184,166,0.13); border-color:rgba(20,184,166,0.32); }
+  .type-badge.vet        { color:#4d7c0f; background:rgba(132,204,22,0.15); border-color:rgba(132,204,22,0.35); }
+  .type-badge.sub        { margin-left: 4px; }
+
+  /* 병의원 · 동물병원 아바타 */
+  .client-avatar.hospital {
+    background: linear-gradient(135deg, #2dd4bf, #0d9488);
+    box-shadow: 0 4px 12px rgba(13,148,136,0.35);
+  }
+  .client-avatar.vet {
+    background: linear-gradient(135deg, #a3e635, #65a30d);
+    box-shadow: 0 4px 12px rgba(101,163,13,0.35);
+  }
+  /* 병의원 · 동물병원 별도 섹션 */
+  .section-med { margin-top: 2.5rem; }
+  .section-med::before { background: #0d9488; }
+  .section-count { font-weight: 600; color: var(--text-light); letter-spacing: 0.3px; }
+  .grid-empty { grid-column: 1/-1; text-align: center; padding: 2rem 0; color: var(--text-light); font-size: 12px; }
 
   /* 유형 필터 행 */
   .toolbar-types { margin-top: -0.75rem; }
@@ -648,6 +666,16 @@
     background: linear-gradient(135deg, #f472b6, #ec4899);
     box-shadow: 0 4px 12px rgba(236,72,153,0.35);
   }
+  .tseg.active[data-type="hospital"] {
+    background: linear-gradient(135deg, #2dd4bf, #0d9488);
+    box-shadow: 0 4px 12px rgba(13,148,136,0.35);
+  }
+  .tseg.active[data-type="vet"] {
+    background: linear-gradient(135deg, #a3e635, #65a30d);
+    box-shadow: 0 4px 12px rgba(101,163,13,0.35);
+  }
+  .type-seg { flex-wrap: wrap; }
+  .type-seg .tseg { min-width: 72px; }
 
   @media(max-width:640px){
     .hero h1 { font-size: 26px; }
@@ -701,6 +729,8 @@
     <button class="filter-btn type-btn" onclick="filterType('individual',this)">개인</button>
     <button class="filter-btn type-btn" onclick="filterType('sincere',this)">성실</button>
     <button class="filter-btn type-btn" onclick="filterType('corporate',this)">법인</button>
+    <button class="filter-btn type-btn" onclick="filterType('hospital',this)">병의원</button>
+    <button class="filter-btn type-btn" onclick="filterType('vet',this)">동물병원</button>
   </div>
 
   <div class="stats">
@@ -716,6 +746,9 @@
       <div>GitHub에서 고객사 목록을 불러오는 중...</div>
     </div>
   </div>
+
+  <div class="section-label section-med" id="medLabel">병의원 · 동물병원 <span class="section-count" id="medCount"></span></div>
+  <div class="client-grid" id="medGrid"></div>
 </div>
 
 <div class="overlay" id="ov" onclick="ovClick(event)">
@@ -745,11 +778,13 @@
         </div>
       </div>
       <div class="mf">
-        <label class="ml">보고서 유형 <span style="color:var(--red)">*</span> <span style="color:var(--text-light);font-weight:500">(성실은 자동인식 불가 — 직접 지정)</span></label>
+        <label class="ml">보고서 유형 <span style="color:var(--red)">*</span> <span style="color:var(--text-light);font-weight:500">(성실·병의원·동물병원은 직접 지정 — 파일에 유형 메타가 있으면 자동)</span></label>
         <div class="type-seg" id="typeSeg">
           <button type="button" class="tseg" data-type="individual" onclick="selType('individual')">개인</button>
           <button type="button" class="tseg" data-type="sincere" onclick="selType('sincere')">성실</button>
           <button type="button" class="tseg" data-type="corporate" onclick="selType('corporate')">법인</button>
+          <button type="button" class="tseg" data-type="hospital" onclick="selType('hospital')">병의원</button>
+          <button type="button" class="tseg" data-type="vet" onclick="selType('vet')">동물병원</button>
         </div>
       </div>
       <div class="mf" id="mRegR">
@@ -837,11 +872,41 @@ let delMode = '', delFolder = '', delYear = '', delCardEl = null, delRowEl = nul
 const SINCERE_FOLDERS = ['꾸준컴퍼니', '넘버디', '닥터서동물심장병원', '모카', '이호민'];
 
 const TYPE_META = {
-  corporate:  { badge: '법인', cls: 'corporate',  report: '법인세 및 결산 분석 보고서' },
-  individual: { badge: '개인', cls: 'individual', report: '종소세 및 결산분석보고서' },
-  sincere:    { badge: '성실', cls: 'sincere',    report: '종소세(성실) 및 결산분석보고서' },
+  corporate:  { badge: '법인',     cls: 'corporate',  report: '법인세 및 결산 분석 보고서' },
+  individual: { badge: '개인',     cls: 'individual', report: '종소세 및 결산분석보고서' },
+  sincere:    { badge: '성실',     cls: 'sincere',    report: '종소세(성실) 및 결산분석보고서' },
+  hospital:   { badge: '병의원',   cls: 'hospital',   report: '종소세 및 결산분석보고서 (병의원)' },
+  vet:        { badge: '동물병원', cls: 'vet',        report: '종소세 및 결산분석보고서 (동물병원)' },
 };
-const RTYPE_ALIAS = { '성실':'sincere', sincere:'sincere', '개인':'individual', individual:'individual', '법인':'corporate', corporate:'corporate' };
+const RTYPE_ALIAS = { '성실':'sincere', sincere:'sincere', '개인':'individual', individual:'individual', '법인':'corporate', corporate:'corporate',
+                      '병의원':'hospital', hospital:'hospital', '동물병원':'vet', vet:'vet' };
+const TYPE_KOR = { individual:'개인', sincere:'성실', corporate:'법인', hospital:'병의원', vet:'동물병원' };
+
+// ── 병의원 · 동물병원 섹션 ─────────────────────────────────────
+// 1순위) report-type 메타가 병의원/동물병원
+// 2순위) 아래 override 목록 (상호명으로 판별이 안 되는 경우 수동 지정 · MED_EXCLUDE는 섹션에서 제외)
+// 3순위) 상호명 자동판별 — 동물·수의·애견·반려 → 동물병원, 의원·병원·치과·한의원 → 병의원
+//        (메타가 없는 기존 보고서는 섹션만 옮기고 배지는 원래 유형(성실·개인)을 유지)
+const HOSPITAL_FOLDERS = [];
+const VET_FOLDERS      = [];
+const MED_EXCLUDE      = [];
+function getMedGroup(c) {
+  c = c || {};
+  const t = getReportType(c);
+  if (t === 'hospital' || t === 'vet') return t;
+  if (MED_EXCLUDE.includes(c.folder)) return '';
+  if (VET_FOLDERS.includes(c.folder)) return 'vet';
+  if (HOSPITAL_FOLDERS.includes(c.folder)) return 'hospital';
+  const nm = `${c.folder || ''} ${c.displayName || ''}`;
+  if (/동물|수의|애견|반려/.test(nm)) return 'vet';
+  if (/의원|병원|치과|한의원|메디컬|클리닉/.test(nm)) return 'hospital';
+  return '';
+}
+// 병의원·동물병원 보고서의 성실신고 여부 (report-sincere 메타: 성실 | 일반)
+function sincereSub(c) {
+  const v = ((c && c.rsub) || '').trim();
+  return v === '성실' ? '성실' : '';
+}
 
 // 등록번호만으로 가능한 1차 분류 (개인 vs 법인)
 function getClientType(reg) {
@@ -907,7 +972,7 @@ async function loadClients() {
         const htmlFiles = files.filter(f => f.type === 'file' && /^\d{4}\.html$/.test(f.name));
         if (htmlFiles.length === 0) return null;
 
-        let reg = '', ceo = '', displayName = folder.name, rtype = '';
+        let reg = '', ceo = '', displayName = folder.name, rtype = '', rsub = '';
         try {
           const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BR}/${encodeURIComponent(folder.name)}/${htmlFiles[0].name}`;
           const rr = await fetchWithTimeout(rawUrl, {}, 8000);
@@ -917,10 +982,12 @@ async function loadClients() {
             const ceoM   = text.match(/<meta\s+name="client-ceo"\s+content="([^"]+)"/i);
             const nameM  = text.match(/<meta\s+name="client-name"\s+content="([^"]+)"/i);
             const typeM  = text.match(/<meta\s+name="report-type"\s+content="([^"]+)"/i);
+            const subM   = text.match(/<meta\s+name="report-sincere"\s+content="([^"]+)"/i);
             if (regM)   reg  = regM[1];
             if (ceoM)   ceo  = ceoM[1];
             if (nameM)  displayName = nameM[1];
             if (typeM)  rtype = typeM[1];
+            if (subM)   rsub  = subM[1];
           }
         } catch(e) {}
 
@@ -928,6 +995,7 @@ async function loadClients() {
           folder: folder.name,
           displayName,
           rtype,
+          rsub,
           reg: reg ? `${reg}${ceo ? ' · ' + ceo + ' 대표' : ''}` : '',
           years: htmlFiles.map(f => f.name.replace('.html','')).sort((a,b) => b-a)
         };
@@ -980,9 +1048,15 @@ function renderGrid(clients) {
     </div>`;
   grid.appendChild(addCard);
 
+  const medGrid = document.getElementById('medGrid');
+  medGrid.innerHTML = '';
   clients.forEach(c => {
     const rtype = getReportType(c);
+    const med = getMedGroup(c);
     const tm = TYPE_META[rtype];
+    const avCls = med || tm.cls;
+    const sub = (rtype === 'hospital' || rtype === 'vet') && sincereSub(c)
+      ? `<span class="type-badge sincere sub">성실</span>` : '';
     const av = c.displayName.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || c.displayName.slice(0,2);
     const yearsAttr = c.years.join(',');
 
@@ -991,9 +1065,10 @@ function renderGrid(clients) {
     card.dataset.name = c.folder;
     card.dataset.years = yearsAttr;
     card.dataset.type = rtype;
+    card.dataset.med = med;
     card.dataset.search = [c.folder, c.displayName, c.reg].filter(Boolean).join(' ').toLowerCase();
 
-    const reportLabel = tm.report;
+    const reportLabel = sub ? tm.report.replace('종소세 ', '종소세(성실) ') : tm.report;
     const yearRowsHtml = c.years.map(yr => {
       const url = `${BASE}/${encodeURIComponent(c.folder)}/${yr}.html`;
       return `
@@ -1012,18 +1087,32 @@ function renderGrid(clients) {
       <button class="btn-del-card" title="고객사 전체 삭제"
         onclick="openDelM('client','${c.folder}','',this.closest('.client-card'))">🗑</button>
       <div class="card-header">
-        <div class="client-avatar ${tm.cls}">${av}</div>
-        <div><div class="client-name">${c.displayName}<span class="type-badge ${tm.cls}">${tm.badge}</span></div><div class="client-reg">${c.reg || '—'}</div></div>
+        <div class="client-avatar ${avCls}">${av}</div>
+        <div><div class="client-name">${c.displayName}<span class="type-badge ${tm.cls}">${tm.badge}</span>${sub}</div><div class="client-reg">${c.reg || '—'}</div></div>
       </div>
       <div class="card-body">
         <div class="year-list">${yearRowsHtml}</div>
         <button class="add-year" onclick="openM('year','${c.folder}','${c.displayName}')">＋ 새 연도 보고서 추가</button>
       </div>`;
 
-    grid.appendChild(card);
+    (med ? medGrid : grid).appendChild(card);
   });
 
   updateStats();
+  updateMedSection();
+}
+
+// 의료 섹션: 보이는 카드 수 표시 · 없으면 안내
+function updateMedSection() {
+  const medGrid = document.getElementById('medGrid');
+  const cards = medGrid.querySelectorAll('.client-card[data-name]');
+  const vis = [...cards].filter(c => !c.classList.contains('hidden')).length;
+  document.getElementById('medCount').textContent = cards.length ? `${vis}곳` : '';
+  let empty = medGrid.querySelector('.grid-empty');
+  if (!vis) {
+    if (!empty) { empty = document.createElement('div'); empty.className = 'grid-empty'; medGrid.appendChild(empty); }
+    empty.textContent = cards.length ? '조건에 맞는 병의원 · 동물병원이 없습니다' : '등록된 병의원 · 동물병원이 없습니다 — 업로드 시 유형을 병의원/동물병원으로 지정';
+  } else if (empty) empty.remove();
 }
 
 function updateStats() {
@@ -1040,9 +1129,11 @@ function filterClients() {
     const haystack = (c.dataset.search || c.dataset.name || '').toLowerCase();
     const matchText = !q || haystack.includes(q);
     const matchYear = aYear === 'all' || (c.dataset.years || '').split(',').includes(aYear);
-    const matchType = aType === 'all' || (c.dataset.type || 'corporate') === aType;
+    const matchType = aType === 'all'
+      || ((aType === 'hospital' || aType === 'vet') ? (c.dataset.med || '') === aType : (c.dataset.type || 'corporate') === aType);
     c.classList.toggle('hidden', !(matchText && matchYear && matchType));
   });
+  updateMedSection();
 }
 function filterYear(y, btn) {
   aYear = y;
@@ -1170,7 +1261,8 @@ async function extractMetaFromFile(file) {
       reg:  m('client-reg'),
       ceo:  m('client-ceo'),
       year: m('report-year'),
-      rtype: m('report-type')
+      rtype: m('report-type'),
+      rsub: m('report-sincere')
     };
     // report-type 메타가 없으면 본문에서 성실신고확인 대상 경고배너로 성실 여부 자동 감지
     if (!meta.rtype && /sincere-title"[^>]*>\s*성실신고확인\s*대상\s*[—–-]/.test(text)) {
@@ -1271,7 +1363,7 @@ async function doUp() {
   aLog('i', `업로드 시작: ${cl}/${yr}.html`);
 
   // 선택한 보고서 유형을 HTML head의 report-type 메타로 주입 → 파일 자체로 유형 식별 가능
-  const typeKor = { individual:'개인', sincere:'성실', corporate:'법인' }[selectedType] || '개인';
+  const typeKor = TYPE_KOR[selectedType] || '개인';
   let html = await curFile.text();
   const metaTag = `<meta name="report-type" content="${typeKor}">`;
   if (/<meta\s+name="report-type"[^>]*>/i.test(html)) {
@@ -1345,6 +1437,7 @@ function insertCardDOM(cl, yr, url, reg) {
     }
   } else {
     const rtype = getReportType({ reg, folder: cl, rtype: selectedType });
+    const med = getMedGroup({ reg, folder: cl, rtype: selectedType });
     const tm = TYPE_META[rtype];
     const av = cl.replace(/^\(.*?\)/,'').replace(/주식회사|㈜|\(주\)/g,'').trim().slice(0,2) || cl.slice(0,2);
     const reportLabel = tm.report;
@@ -1353,12 +1446,13 @@ function insertCardDOM(cl, yr, url, reg) {
     el.dataset.name = cl;
     el.dataset.years = yr;
     el.dataset.type = rtype;
+    el.dataset.med = med;
     el.dataset.search = [cl, reg].filter(Boolean).join(' ').toLowerCase();
     el.innerHTML = `
       <button class="btn-del-card" title="고객사 전체 삭제"
         onclick="openDelM('client','${cl}','',this.closest('.client-card'))">🗑</button>
       <div class="card-header">
-        <div class="client-avatar ${tm.cls}">${av}</div>
+        <div class="client-avatar ${med || tm.cls}">${av}</div>
         <div><div class="client-name">${cl}<span class="type-badge ${tm.cls}">${tm.badge}</span></div><div class="client-reg">${reg||'—'}</div></div>
       </div>
       <div class="card-body">
@@ -1375,9 +1469,11 @@ function insertCardDOM(cl, yr, url, reg) {
         </div>
         <button class="add-year" onclick="openM('year','${cl}','${cl}')">＋ 새 연도 보고서 추가</button>
       </div>`;
-    grid.insertBefore(el, addC.nextSibling);
+    if (med) document.getElementById('medGrid').prepend(el);
+    else grid.insertBefore(el, addC.nextSibling);
   }
   updateStats();
+  updateMedSection();
 }
 
 function openDelM(mode, folder, year, el) {
